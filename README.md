@@ -38,7 +38,7 @@ Change path according to your installation.
 | Object Detection (mobilenet-ssd)                                         | RPi     | 6.90  |
 | Object Detection And Tracking with default configuration (mobilenet-ssd) | RPi     | 10.17 |
 
-### Credits
+### References
 
 Thanks to [Adrian Rosenbrock](https://github.com/jrosebr1) for the following helpful tutorials:
 
