@@ -2,6 +2,8 @@
 
 ## Vehicle detection examples with OpenVINO running on Raspberry Pi 3 Model B (RPi) and Intel® Core™ i7-4790K CPU @ 4.00GHz × 8 (desktop)
 
+[![Car Detection with Intel NCS2 and Raspberry Pi](https://img.youtube.com/vi/HmZiPxM4OMk/0.jpg)](https://www.youtube.com/watch?v=HmZiPxM4OMk)
+
 ### Requirements
 * Raspberry Pi 3 Model B
 * Movidius Neural Compute Stick 2 (not tested yet on NCS)
