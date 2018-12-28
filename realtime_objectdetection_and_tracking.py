@@ -20,6 +20,11 @@ os_info = os.uname()
 if os_info[4][:3] == 'arm':
     running_on_rpi = True
 
+# check if optimization is enabled
+if not cv2.useOptimized():
+    print("By default, OpenCV has not been optimized")
+    cv2.setUseOptimized(True)
+
 
 writer = None
 W = None
@@ -38,6 +43,8 @@ totalFrames = 0
 totalDown = 0
 totalUp = 0
 totalOverall = 0
+
+image_for_result = None
 
 
 # initialize the list of class labels our network was trained to
@@ -120,6 +127,8 @@ ap.add_argument("-o", "--output", type=str,
                 help="path to optional output video file")
 ap.add_argument("-s", "--skip-frames", type=int, default=3,
 	help="# of skip frames between detections")
+ap.add_argument("-r", "--resize", type=str, default=None,
+                help="resized frames dimensions, e.g. 320,240")
 args = vars(ap.parse_args())
 
 # Load the model
@@ -131,8 +140,11 @@ net.setPreferableTarget(cv2.dnn.DNN_TARGET_MYRIAD)
 # if a video path was not supplied, grab a reference to the webcam
 if not args.get("input", False):
     print("[INFO] starting video stream...")
-    # cap = cv2.VideoCapture(0)
-    vs = VideoStream(src=0).start()
+    if args["resize"] is not None:
+        w, h = [int(item) for item in args["resize"].split(",")]
+        vs = VideoStream(src=0, resolution=(w, h)).start()
+    else:
+        vs = VideoStream(src=0).start()
     time.sleep(2.0)
 
 # otherwise, grab a reference to the video file
@@ -153,6 +165,10 @@ while True:
 
         frame = crop(frame, 540, 960, 540, 960)
 
+        if args["resize"] is not None:
+            w, h = [int(item) for item in args["resize"].split(",")]
+            frame = resize(frame, width=w, height=h)
+
         # if we are viewing a video and we did not grab a frame then we
         # have reached the end of the video
         if args["input"] is not None and frame is None:
@@ -162,7 +178,9 @@ while True:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         H, W, _ = frame.shape
-        image_for_result = frame.copy()
+
+        if args["display"] > 0 or args["output"] is not None:
+            image_for_result = frame.copy()
 
         # if we are supposed to be writing a video to disk, initialize
         # the writer
@@ -301,18 +319,19 @@ while True:
             # extract information from the prediction boxpoints
             y = y_min - 15 if y_min - 15 > 15 else y_min + 15
 
-            # display the rectangle and label text
-            # cv2.rectangle(image_for_result, (x_min, y_min), (x_max, y_max),
-            #               (255, 0, 0), 2)
-            # cv2.putText(image_for_result, label, (x_min, y),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
+            if image_for_result is not None:
+                # display the rectangle and label text
+                # cv2.rectangle(image_for_result, (x_min, y_min), (x_max, y_max),
+                #               (255, 0, 0), 2)
+                # cv2.putText(image_for_result, label, (x_min, y),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
 
-            # draw both the ID of the object and the centroid of the
-            # object on the output frame
-            text = "ID {}".format(objectID)
-            cv2.putText(image_for_result, text, (centroid[0] - 10, centroid[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.circle(image_for_result, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
+                # draw both the ID of the object and the centroid of the
+                # object on the output frame
+                text = "ID {}".format(objectID)
+                cv2.putText(image_for_result, text, (centroid[0] - 10, centroid[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.circle(image_for_result, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
         # construct a tuple of information we will be displaying on the
         # frame
@@ -323,11 +342,12 @@ while True:
             ("Status", status),
         ]
 
-        # loop over the info tuples and draw them on our frame
-        for (i, (k, v)) in enumerate(info):
-            text = "{}: {}".format(k, v)
-            cv2.putText(image_for_result, text, (10, H - ((i * 20) + 20)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        if image_for_result is not None:
+            # loop over the info tuples and draw them on our frame
+            for (i, (k, v)) in enumerate(info):
+                text = "{}: {}".format(k, v)
+                cv2.putText(image_for_result, text, (10, H - ((i * 20) + 20)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
         # check to see if we should write the frame to disk
         if writer is not None:

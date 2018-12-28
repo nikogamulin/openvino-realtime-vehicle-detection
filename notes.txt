@@ -27,3 +27,23 @@ Links to mention
 https://github.com/opencv/open_model_zoo/tree/2018/model_downloader
 https://software.intel.com/en-us/articles/OpenVINO-ModelOptimizer
 
+
+New Tests
+pi@raspberrypi:~/workspace/openvino-realtime-vehicledetection $ python3 realtime_objectdetection_and_tracking.py 
+[INFO] starting video stream...
+^C[INFO] elapsed time: 46.02
+[INFO] approx. FPS: 25.16
+
+pi@raspberrypi:~/workspace/openvino-realtime-vehicledetection $ python3 realtime_objectdetection.py [INFO] starting video stream...
+^C[INFO] elapsed time: 37.17
+[INFO] approx. FPS: 8.96
+
+python3 realtime_objectdetection.py --resize 320,240
+[INFO] starting video stream...
+^C[INFO] elapsed time: 58.94
+[INFO] approx. FPS: 9.60
+
+
+
+
+

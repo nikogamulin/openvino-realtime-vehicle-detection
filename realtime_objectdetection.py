@@ -21,6 +21,11 @@ writer = None
 W = None
 H = None
 
+# check if optimization is enabled
+if not cv2.useOptimized():
+    print("By default, OpenCV has not been optimized")
+    cv2.setUseOptimized(True)
+
 
 # initialize the list of class labels our network was trained to
 # detect, then generate a set of bounding box colors for each class
@@ -28,6 +33,8 @@ CLASSES = ("background", "aeroplane", "bicycle", "bird",
            "boat", "bottle", "bus", "car", "cat", "chair", "cow",
            "diningtable", "dog", "horse", "motorbike", "person",
            "pottedplant", "sheep", "sofa", "train", "tvmonitor")
+
+image_for_result = None
 
 
 def predict(frame, net):
@@ -93,6 +100,8 @@ ap.add_argument("-i", "--input", type=str,
                 help="path to optional input video file")
 ap.add_argument("-o", "--output", type=str,
                 help="path to optional output video file")
+ap.add_argument("-r", "--resize", type=str, default=None,
+                help="resized frames dimensions, e.g. 320,240")
 args = vars(ap.parse_args())
 
 # Load the model
@@ -104,8 +113,11 @@ net.setPreferableTarget(cv2.dnn.DNN_TARGET_MYRIAD)
 # if a video path was not supplied, grab a reference to the webcam
 if not args.get("input", False):
     print("[INFO] starting video stream...")
-    # cap = cv2.VideoCapture(0)
-    vs = VideoStream(src=0).start()
+    if args["resize"] is not None:
+        w, h = [int(item) for item in args["resize"].split(",")]
+        vs = VideoStream(src=0, resolution=(w, h)).start()
+    else:
+        vs = VideoStream(src=0).start()
     time.sleep(2.0)
 
 # otherwise, grab a reference to the video file
@@ -123,9 +135,10 @@ while True:
         # make a copy of the frame and resize it for display/video purposes
         frame = vs.read()
         frame = frame[1] if args.get("input", False) else frame
-        # frame = resize(frame, 800)
+
         H, W, _ = frame.shape
-        image_for_result = frame.copy()
+        if args["display"] > 0 or args["output"] is not None:
+            image_for_result = frame.copy()
 
         # if we are supposed to be writing a video to disk, initialize
         # the writer

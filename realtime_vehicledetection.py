@@ -19,6 +19,11 @@ writer = None
 W = None
 H = None
 
+# check if optimization is enabled
+if not cv2.useOptimized():
+    print("By default, OpenCV has not been optimized")
+    cv2.setUseOptimized(True)
+
 
 def predict(frame, net):
     # Prepare input blob and perform an inference
